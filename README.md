@@ -2,7 +2,10 @@
 
 An n8n automation that handles inbound leads end-to-end — from the moment a lead hits your CRM to a booked appointment on your calendar — using AI voice calls powered by Retell AI and Twilio SIP.
 
-![System Overview](assets/system-overview.png)
+
+![Business Case](business_explanation.png)
+
+![System Overview](workflow.png)
 
 ---
 
@@ -162,34 +165,6 @@ The workflow uses a few custom fields on the `CRM Lead` doctype. You'll need to 
 | `custom_qualification_score` | Int | Lead score returned by the LLM |
 | `custom_call_notes` | Text | AI-generated call summary |
 | `custom_call_recording` | Data | URL to call recording |
-
----
-
-## Environment Variables Reference
-
-All sensitive config lives in the **Workflow Configuration** nodes. No credentials are hardcoded. Here's a full reference:
-
-```env
-# Frappe CRM
-FRAPPE_URL=https://YOUR-INSTANCE.frappe.cloud
-FRAPPE_TOKEN=token YOUR_API_KEY:YOUR_API_SECRET
-
-# n8n Webhook Base
-N8N_BASE_URL=https://YOUR-N8N-INSTANCE.app.n8n.cloud
-
-# Twilio
-TWILIO_ACCOUNT_SID=ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-TWILIO_FROM_NUMBER=+1XXXXXXXXXX
-TWILIO_OUTBOUND_WEBHOOK=https://YOUR-N8N-INSTANCE/webhook/start-outbound-call
-
-# Retell AI
-RETELL_API_KEY=key_XXXXXXXXXXXXXXXXXXXXXXXX
-RETELL_AGENT_ID=YOUR_AGENT_ID
-
-# Google
-GOOGLE_CALENDAR_ID=your-calendar@group.calendar.google.com
-ERROR_LOG_SHEET_ID=YOUR_GOOGLE_SHEET_ID
-```
 
 ---
 
