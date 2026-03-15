@@ -1,0 +1,2159 @@
+{
+  "name": "Voice AI Lead Qualification and Appointment Booking System",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "success",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "id-2",
+              "name": "message",
+              "value": "AI call initiated successfully",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "lead_id",
+              "value": "={{ $('Merge Lead Data').first().json.lead_id }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "call_sid",
+              "value": "={{ $('Trigger Outbound Call').first().json.sid }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8bd620e8-7c8c-40f9-a5ce-07b7538ac2e3",
+      "name": "Format Success Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6672,
+        6656
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $('Workflow Configuration').first().json.FRAPPE_URL }}/api/resource/CRM Lead/{{ $('Merge Lead Data').first().json.lead_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ $('Workflow Configuration').first().json.FRAPPE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"custom_ai_call_status\": \"Calling\",\n  \"custom_twilio_call_sid\": \"{{ $('Trigger Outbound Call').first().json.sid }}\"\n}",
+        "options": {}
+      },
+      "id": "807094ca-9a1b-4428-8a59-c6619b3bba09",
+      "name": "Update Lead - Calling",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        6448,
+        6656
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.TWILIO_OUTBOUND_WEBHOOK }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"to_number\": \"+2{{ $json.mobile_no }}\",\n  \"lead_id\": \"{{ $json.lead_id }}\",\n  \"lead_name\": \"{{ $json.lead_name }}\",\n  \"lead_gender\": \"{{ $json.lead_gender }}\"\n}",
+        "options": {
+          "response": {
+            "response": {}
+          }
+        }
+      },
+      "id": "bdae36e9-ba72-4b45-aff7-0f7b00e191de",
+      "name": "Trigger Outbound Call",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        6224,
+        6656
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {},
+      "id": "53ae6bc8-13b6-478a-9979-50c4b6843bc3",
+      "name": "Wait Before Call",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        6000,
+        6656
+      ],
+      "webhookId": "7f7bd39e-ae0e-4c1f-a5c8-c73908a35296"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "lead_id",
+              "value": "={{ $json.data.name }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "lead_name",
+              "value": "={{ $('New Lead Webhook').first().json.body.lead_name || 'Customer' }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "lead_gender",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "mobile_no",
+              "value": "={{ $('New Lead Webhook').first().json.body.mobile_no }}",
+              "type": "string"
+            },
+            {
+              "id": "id-call-status",
+              "name": "call_status",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d89e0595-4692-4304-aa35-758cd127dab3",
+      "name": "Set New Lead Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5552,
+        6752
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "lead_id",
+              "value": "={{ $('If Lead Exists').first().json.data[0].name }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "lead_name",
+              "value": "={{ $('If Lead Exists').first().json.data[0].first_name || 'Customer' }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "lead_gender",
+              "value": "={{ $('If Lead Exists').first().json.data[0].gender || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "mobile_no",
+              "value": "={{ $('New Lead Webhook').first().json.body.mobile_no }}",
+              "type": "string"
+            },
+            {
+              "id": "id-call-status",
+              "name": "call_status",
+              "value": "={{ $('If Lead Exists').first().json.data[0].custom_ai_call_status || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5388e630-2a32-480e-832d-37bf193e4a5b",
+      "name": "Set Existing Lead Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5552,
+        6560
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.FRAPPE_URL }}/api/resource/CRM Lead",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ $('Workflow Configuration').first().json.FRAPPE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"first_name\": \"{{ $('New Lead Webhook').first().json.body.lead_name || 'Unknown' }}\",\n  \"mobile_no\": \"{{ $('New Lead Webhook').first().json.body.mobile_no }}\",\n  \"email_id\": \"{{ $('New Lead Webhook').first().json.body.email || '' }}\",\n  \"source\": \"{{ $('New Lead Webhook').first().json.body.source || 'Voice AI' }}\",\n  \"custom_ai_call_status\": \"Pending\"\n}",
+        "options": {}
+      },
+      "id": "b0985ee3-b8d9-4166-a969-43b16c0cf064",
+      "name": "Create Lead in Frappe",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        5328,
+        6752
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8212f88a-d6b0-4e23-82b3-7b3f53b3b4be",
+              "leftValue": "={{ $json.data }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        5104,
+        6656
+      ],
+      "id": "557c27cc-d2a6-4d77-87ed-b3942fa932c5",
+      "name": "If Lead Exists"
+    },
+    {
+      "parameters": {
+        "errorMessage": "Lead does not have phone number to contact"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        4880,
+        6848
+      ],
+      "id": "e6c6a7c4-4921-4ef7-a3ab-47c8df2d2339",
+      "name": "Stop - No Phone"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Workflow Configuration').first().json.FRAPPE_URL }}/api/resource/CRM Lead",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filters",
+              "value": "=[[\"mobile_no\",\"=\",\"{{ $('New Lead Webhook').first().json.body.mobile_no }}\"]]"
+            },
+            {
+              "name": "fields",
+              "value": "[\"name\",\"mobile_no\",\"first_name\",\"last_name\",\"status\",\"gender\"]"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ $('Workflow Configuration').first().json.FRAPPE_TOKEN }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "711157df-13d5-4c41-8aae-29083b7baa2f",
+      "name": "Check if Lead Exists",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        4880,
+        6656
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $('New Lead Webhook').first().json.body.mobile_no }}",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "944c3302-efac-4ca5-afe6-00ee8ed7d68d",
+      "name": "Validate Phone Exists",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4656,
+        6752
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "FRAPPE_URL",
+              "value": "https://YOUR-INSTANCE.frappe.cloud",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "FRAPPE_TOKEN",
+              "value": "token YOUR_API_KEY:YOUR_API_SECRET",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "TWILIO_OUTBOUND_WEBHOOK",
+              "value": "https://YOUR-N8N-INSTANCE.app.n8n.cloud/webhook/start-outbound-call",
+              "type": "string"
+            },
+            {
+              "id": "id-webhook-secret-WorkflowConfiguration",
+              "name": "WEBHOOK_SECRET",
+              "value": "YOUR_WEBHOOK_SECRET_HERE",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "91ff18a3-0a15-43a8-86b3-a527156881fd",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4512,
+        6752
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "new-lead",
+        "options": {}
+      },
+      "id": "acda1f9b-e821-4b7b-b2d8-44cca6821f85",
+      "name": "New Lead Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        4176,
+        6752
+      ],
+      "webhookId": "d3d9e561-81cd-4065-8677-b062dd8d012e"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID-Y8",
+          "mode": "list",
+          "cachedResultName": "N8N",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID-Y8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID-Y8/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "node": "={{ $('Workflow Configuration 8').first().json.error_node }}\n",
+            "time": "={{ $('Workflow Configuration 8').first().json.error_time }}\"",
+            "error message": "={{ $('Workflow Configuration 8').first().json.error_message }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "node",
+              "displayName": "node",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "error message",
+              "displayName": "error message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "time",
+              "displayName": "time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "50211fa2-84f1-4d95-9b6f-527e931453d6",
+      "name": "Log Error to Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4640,
+        9040
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "jNKd6oPR4BZkphuG",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "from": "+1XXXXXXXXXX",
+        "to": "=+20XXXXXXXXXX",
+        "toWhatsapp": true,
+        "message": "=🚨 Workflow Error Alert\n\nNode: {{ $('Workflow Configuration 8').first().json.error_node }}\nError: {{ $('Workflow Configuration 8').first().json.error_message }}\nTime: {{ $('Workflow Configuration 8').first().json.error_time }}",
+        "options": {}
+      },
+      "id": "4c29cf59-6ef0-4d5a-b1ce-6116a20b421e",
+      "name": "SMS Admin Error Alert",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        4640,
+        8848
+      ],
+      "credentials": {
+        "twilioApi": {
+          "id": "5azZZh9DlRS2IUoQ",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "ADMIN_PHONE",
+              "value": "+20XXXXXXXXXX",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "ADMIN_EMAIL",
+              "value": "YOUR_ADMIN_EMAIL@example.com",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "error_message",
+              "value": "={{ $json.execution.error.message }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "error_node",
+              "value": "={{ $json.execution.lastNodeExecuted }}",
+              "type": "string"
+            },
+            {
+              "id": "id-5",
+              "name": "error_time",
+              "value": "={{ $now.toISO({ includeOffset: false }) }}",
+              "type": "string"
+            },
+            {
+              "id": "id-6",
+              "name": "note",
+              "value": "Extracts error details for admin notification",
+              "type": "string"
+            },
+            {
+              "id": "id-webhook-secret-WorkflowConfiguration8",
+              "name": "WEBHOOK_SECRET",
+              "value": "YOUR_WEBHOOK_SECRET_HERE",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "83bcb513-507e-486a-b5a9-ea9fd7706d9c",
+      "name": "Workflow Configuration 8",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4416,
+        8944
+      ]
+    },
+    {
+      "parameters": {
+        "notice": "Catches any workflow errors and triggers error handling"
+      },
+      "id": "c7b55b26-6df6-4f14-b824-545a8c20fd12",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        4192,
+        8944
+      ]
+    },
+    {
+      "parameters": {
+        "generalNotice": "Returns success confirmation to AI agent",
+        "options": {}
+      },
+      "id": "9c9ef0f6-37ee-4fcf-8624-636cf12b4509",
+      "name": "Return Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        4928,
+        8592
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $('Workflow Configuration 5').first().json.FRAPPE_URL }}/api/resource/Lead/={{ $('Workflow Configuration 5').first().json.lead_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ $('Workflow Configuration 5').first().json.FRAPPE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $('Workflow Configuration 5').first().json.update_data }}",
+        "options": {},
+        "infoMessage": "Updates lead record in Frappe CRM with data from AI call"
+      },
+      "id": "78e9696b-b259-40c0-911f-6fc194d45c42",
+      "name": "Update Frappe Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        4768,
+        8592
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "FRAPPE_URL",
+              "value": "https://YOUR-INSTANCE.frappe.cloud",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "lead_id",
+              "value": "={{ $json.lead_id }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "update_data",
+              "value": "={{ $json.update_data }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "note",
+              "value": "Extracts CRM update data from webhook payload",
+              "type": "string"
+            },
+            {
+              "id": "id-webhook-secret-WorkflowConfiguration5",
+              "name": "WEBHOOK_SECRET",
+              "value": "YOUR_WEBHOOK_SECRET_HERE",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9236b3e4-cf16-412f-9f46-8823041402ce",
+      "name": "Workflow Configuration 5",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4576,
+        8592
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "2062372a-ab34-41d5-a575-0316f4db2b67",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a1396fc7-309d-4924-a2b9-75bc5cb295ec",
+      "name": "Update CRM Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        4192,
+        8592
+      ],
+      "webhookId": "2062372a-ab34-41d5-a575-0316f4db2b67"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "5a726869-aab1-4cd9-a9aa-69c1c5239080",
+      "name": "Return Booking Confirmation",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        5552,
+        7920
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Workflow Configuration').first().json.SALES_TEAM_CHAT_ID }}",
+        "text": "=🎯 New Qualified Appointment Booked!\n\nLead: {{ $('Update Frappe Appointment').first().json.data.lead_name }}\nPhone: {{ $('Update Frappe Appointment').first().json.data.mobile_no }}\nTime: {{ $('Format Appointment Data').first().json.start_time }}\nScore: {{ $('Update Frappe Appointment').first().json.data.custom_qualification_score }}/100",
+        "additionalFields": {}
+      },
+      "id": "a6b4f6d8-9903-4409-a92b-db351d18313d",
+      "name": "Alert Sales Team",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        5328,
+        8304
+      ],
+      "webhookId": "556a720f-a2d6-4474-af8a-cbfa197635c6",
+      "credentials": {
+        "telegramApi": {
+          "id": "t3U1gxhZR0dRsum5",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@yourcompany.com",
+        "toEmail": "={{ $('Update Frappe Appointment').first().json.data.email_id }}",
+        "subject": "=Appointment Confirmation - {{ $('Format Appointment Data').first().json.start_time }}",
+        "html": "=<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }\n    .container { max-width: 600px; margin: 0 auto; padding: 20px; }\n    .header { background-color: #4CAF50; color: white; padding: 20px; text-align: center; }\n    .content { background-color: #f9f9f9; padding: 20px; margin: 20px 0; }\n    .details { background-color: white; padding: 15px; margin: 15px 0; border-left: 4px solid #4CAF50; }\n    .footer { text-align: center; color: #666; font-size: 12px; margin-top: 20px; }\n    .button { background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; display: inline-block; margin: 10px 0; border-radius: 4px; }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <div class=\"header\">\n      <h1>Appointment Confirmed</h1>\n    </div>\n    <div class=\"content\">\n      <p>Dear {{ $('Update Frappe Appointment').first().json.data.lead_name }},</p>\n      <p>Your appointment has been successfully scheduled. We look forward to meeting with you!</p>\n      \n      <div class=\"details\">\n        <h3>Appointment Details:</h3>\n        <p><strong>Date & Time:</strong> {{ $('Format Appointment Data').first().json.start_time }}</p>\n        <p><strong>Duration:</strong> {{ $('Format Appointment Data').first().json.duration }} minutes</p>\n        <p><strong>Location:</strong> {{ $('Format Appointment Data').first().json.location || 'Virtual Meeting' }}</p>\n        <p><strong>Meeting Link:</strong> {{ $('Create Calendar Event').first().json.hangoutLink || 'Will be provided separately' }}</p>\n      </div>\n      \n      <p>A calendar invitation has been sent to your email. Please add it to your calendar to receive reminders.</p>\n      \n      <p>If you need to reschedule or have any questions, please don't hesitate to contact us.</p>\n    </div>\n    <div class=\"footer\">\n      <p>This is an automated confirmation email.</p>\n      <p>&copy; 2024 Your Company. All rights reserved.</p>\n    </div>\n  </div>\n</body>\n</html>",
+        "options": {}
+      },
+      "id": "0083a8fb-2042-4af9-8d77-d786d4d140e0",
+      "name": "Send Email Confirmation",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        5328,
+        8112
+      ],
+      "webhookId": "b806f7c0-e892-4d73-b2f7-a3261194728c",
+      "credentials": {
+        "smtp": {
+          "id": "YN0CKACvffq8uM5n",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "from": "+1XXXXXXXXXX",
+        "to": "={{ $('Update Frappe Appointment').first().json.data.mobile_no }}",
+        "message": "=Your appointment is confirmed for {{ $('Format Appointment Data').first().json.start_time }}. We look forward to speaking with you!",
+        "options": {}
+      },
+      "id": "ef45e6cc-0b15-4143-af99-e899a8358ce7",
+      "name": "Send SMS Confirmation",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        5328,
+        7920
+      ],
+      "credentials": {
+        "twilioApi": {
+          "id": "5azZZh9DlRS2IUoQ",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $('Workflow Configuration 4').first().json.FRAPPE_URL }}/api/resource/Lead/={{ $('Workflow Configuration 4').first().json.lead_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ $('Workflow Configuration 4').first().json.FRAPPE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "custom_appointment_scheduled",
+              "value": "1"
+            },
+            {
+              "name": "custom_appointment_time",
+              "value": "={{ $('Format Appointment Data').first().json.start_time }}"
+            },
+            {
+              "name": "custom_calendar_event_id",
+              "value": "={{ $('Create Calendar Event').first().json.id }}"
+            },
+            {
+              "name": "status",
+              "value": "Open"
+            }
+          ]
+        },
+        "options": {},
+        "infoMessage": "Updates CRM with appointment details and calendar event ID"
+      },
+      "id": "187e998c-17cb-4bd3-9c07-874c51a05f22",
+      "name": "Update Frappe Appointment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        5104,
+        8112
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Workflow Configuration 4').first().json.CALENDAR_ID }}"
+        },
+        "start": "={{ $('Format Appointment Data').first().json.start_time }}",
+        "end": "={{ $('Format Appointment Data').first().json.end_time }}",
+        "additionalFields": {
+          "attendees": "={{ $('Format Appointment Data').first().json.lead_email }}",
+          "description": "={{ $('Format Appointment Data').first().json.description }}",
+          "summary": "={{ $('Format Appointment Data').first().json.summary }}"
+        }
+      },
+      "id": "09a9627b-0500-4413-8fbc-d9861829cb1a",
+      "name": "Create Calendar Event",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        4880,
+        8112
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "PjLFZE4BUqD8MFaA",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format appointment data for calendar event creation\nconst items = $input.all();\nconst formattedItems = [];\n\nfor (const item of items) {\n  const data = item.json;\n  \n  // Parse appointment time\n  const appointmentTime = new Date(data.appointment_time);\n  \n  // Calculate end time based on duration (default 60 minutes if not provided)\n  const duration = data.duration || 60;\n  const endTime = new Date(appointmentTime.getTime() + duration * 60000);\n  \n  // Create event summary and description from lead data\n  const summary = `Appointment with ${data.lead_name || 'Lead'}`;\n  const description = `\nLead: ${data.lead_name || 'N/A'}\nPhone: ${data.phone || 'N/A'}\nEmail: ${data.email || 'N/A'}\nCompany: ${data.company || 'N/A'}\nQualification Score: ${data.qualification_score || 'N/A'}\nNotes: ${data.notes || 'N/A'}\n  `.trim();\n  \n  formattedItems.push({\n    json: {\n      ...data,\n      start_time: appointmentTime.toISOString(),\n      end_time: endTime.toISOString(),\n      summary: summary,\n      description: description,\n      duration: duration\n    }\n  });\n}\n\nreturn formattedItems;",
+        "notice": "Formats appointment data for calendar event creation with lead details"
+      },
+      "id": "e4c16b20-3dff-446e-8621-40ea9173d2fc",
+      "name": "Format Appointment Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4720,
+        8112
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "FRAPPE_URL",
+              "value": "https://YOUR-INSTANCE.frappe.cloud",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "CALENDAR_ID",
+              "value": "primary",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "lead_id",
+              "value": "={{ $json.lead_id }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "appointment_time",
+              "value": "={{ $json.appointment_time }}",
+              "type": "string"
+            },
+            {
+              "id": "id-5",
+              "name": "duration",
+              "value": "={{ $json.duration || 60 }}",
+              "type": "number"
+            },
+            {
+              "id": "id-6",
+              "name": "notes",
+              "value": "={{ $json.notes || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "id-7",
+              "name": "note",
+              "value": "Extracts appointment booking details from webhook",
+              "type": "string"
+            },
+            {
+              "id": "id-webhook-secret-WorkflowConfiguration4",
+              "name": "WEBHOOK_SECRET",
+              "value": "YOUR_WEBHOOK_SECRET_HERE",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e8c7a9c8-c8c4-43ec-806f-8387ad1a54d3",
+      "name": "Workflow Configuration 4",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4544,
+        8112
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "0d62eb61-220a-44fb-b68e-b6d47787e957",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "e58cc25a-e2b5-449a-8ce8-9bb996e5b15c",
+      "name": "Book Appointment Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        4208,
+        8112
+      ],
+      "webhookId": "0d62eb61-220a-44fb-b68e-b6d47787e957"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "77ef0163-abfb-414c-a357-7cddc9bea14c",
+      "name": "Return Available Slots",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        5104,
+        7664
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Timezone-aware slot finder\nconst TIMEZONE = $('Workflow Configuration 3').first().json.TIMEZONE || 'Africa/Cairo';\n\nfunction toLocalDate(isoStr, tz) {\n  return new Date(new Date(isoStr).toLocaleString('en-US', { timeZone: tz }));\n}\nfunction toLocalNow(tz) {\n  return new Date(new Date().toLocaleString('en-US', { timeZone: tz }));\n}\n\n// Get calendar events from previous node\nconst events = $input.all();\n\n// Get requested date and duration from webhook data\nconst requestedDate = $('Workflow Configuration 3').first().json.date || toLocalNow(TIMEZONE).toISOString().split('T')[0];\nconst durationMinutes = parseInt($('Workflow Configuration 3').first().json.duration) || 30;\n\n// Define business hours\nconst businessStart = 9; // 9 AM\nconst businessEnd = 17; // 5 PM\nconst slotIncrement = 30; // 30 minutes\n\n// Parse the requested date\nconst targetDate = toLocalDate(requestedDate + 'T00:00:00', TIMEZONE);\ntargetDate.setHours(0, 0, 0, 0);\n\n// Create array of all possible time slots\nconst allSlots = [];\nfor (let hour = businessStart; hour < businessEnd; hour++) {\n  for (let minute = 0; minute < 60; minute += slotIncrement) {\n    const slotStart = new Date(targetDate);\n    slotStart.setHours(hour, minute, 0, 0);\n    \n    const slotEnd = new Date(slotStart);\n    slotEnd.setMinutes(slotEnd.getMinutes() + durationMinutes);\n    \n    // Only add if slot end is within business hours\n    if (slotEnd.getHours() < businessEnd || (slotEnd.getHours() === businessEnd && slotEnd.getMinutes() === 0)) {\n      allSlots.push({\n        start_time: slotStart.toISOString(),\n        end_time: slotEnd.toISOString()\n      });\n    }\n  }\n}\n\n// Filter out slots that conflict with existing events\nconst availableSlots = allSlots.filter(slot => {\n  const slotStart = new Date(slot.start_time);\n  const slotEnd = new Date(slot.end_time);\n  \n  // Check if this slot conflicts with any existing event\n  const hasConflict = events.some(item => {\n    if (!item.json.start || !item.json.end) return false;\n    \n    const eventStart = new Date(item.json.start.dateTime || item.json.start.date);\n    const eventEnd = new Date(item.json.end.dateTime || item.json.end.date);\n    \n    // Check for overlap\n    return (slotStart < eventEnd && slotEnd > eventStart);\n  });\n  \n  return !hasConflict;\n});\n\n// Return available slots\nreturn [{\n  json: {\n    date: requestedDate,\n    duration_minutes: durationMinutes,\n    available_slots: availableSlots,\n    total_available: availableSlots.length\n  }\n}];",
+        "notice": "Calculates available time slots by comparing business hours (9AM-5PM) with existing events"
+      },
+      "id": "0c4d131d-4f2c-419f-a6d0-c38f8514574a",
+      "name": "Find Free Slots",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4944,
+        7664
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Workflow Configuration 3').first().json.CALENDAR_ID }}"
+        },
+        "timeMin": "={{ $('Workflow Configuration 3').first().json.requested_date }}T00:00:00Z",
+        "timeMax": "={{ $('Workflow Configuration 3').first().json.requested_date }}T23:59:59Z",
+        "options": {}
+      },
+      "id": "f2808ef7-4d59-4ae0-891f-d92900935fe9",
+      "name": "Get Calendar Events",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        4784,
+        7664
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "PjLFZE4BUqD8MFaA",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "CALENDAR_ID",
+              "value": "primary",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "requested_date",
+              "value": "={{ $json.date || $now.toISODate() }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "duration",
+              "value": "={{ $json.duration || 60 }}",
+              "type": "number"
+            },
+            {
+              "id": "id-4",
+              "name": "note",
+              "value": "Configures calendar lookup parameters",
+              "type": "string"
+            },
+            {
+              "id": "id-webhook-secret-WorkflowConfiguration3",
+              "name": "WEBHOOK_SECRET",
+              "value": "YOUR_WEBHOOK_SECRET_HERE",
+              "type": "string"
+            },
+            {
+              "id": "id-timezone",
+              "name": "TIMEZONE",
+              "value": "Africa/Cairo",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "53eef6dc-9edf-4e33-9fe6-ef10ead66858",
+      "name": "Workflow Configuration 3",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4592,
+        7664
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cc4766be-765c-4e1b-8ccc-26ff3d05190a",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "8454a39a-6887-468f-94d6-7033fb9cc0a5",
+      "name": "Get Available Slots Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        4208,
+        7664
+      ],
+      "webhookId": "cc4766be-765c-4e1b-8ccc-26ff3d05190a"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "start-outbound-call",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "c3398134-9fe1-4047-9bd5-46a27ce00d2c",
+      "name": "Receive Call Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        4208,
+        7072
+      ],
+      "webhookId": "cf8f03a2-c389-4226-b0de-33e3ddb0f0ba"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "TWILIO_ACCOUNT_SID",
+              "value": "YOUR_TWILIO_ACCOUNT_SID",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "TWILIO_FROM_NUMBER",
+              "value": "+1XXXXXXXXXX",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "RETELL_API_KEY",
+              "value": "key_YOUR_RETELL_API_KEY_HERE",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "RETELL_AGENT_ID",
+              "value": "agent_YOUR_TWILIO_AUTH_TOKEN",
+              "type": "string"
+            },
+            {
+              "id": "id-5",
+              "name": "to_number",
+              "value": "={{ $('Receive Call Request').first().json.body.to_number }}",
+              "type": "string"
+            },
+            {
+              "id": "id-6",
+              "name": "lead_id",
+              "value": "={{ $('Receive Call Request').first().json.body.lead_id || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "id-7",
+              "name": "lead_name",
+              "value": "={{ $('Receive Call Request').first().json.body.lead_name || ''}}",
+              "type": "string"
+            },
+            {
+              "id": "id-8",
+              "name": "lead_gender",
+              "value": "={{ $('Receive Call Request').first().json.body.lead_gender || ''}}",
+              "type": "string"
+            },
+            {
+              "id": "id-9",
+              "name": "lead_source",
+              "value": "={{ $('Receive Call Request').first().json.body.lead_source || ''}}",
+              "type": "string"
+            },
+            {
+              "id": "id-webhook-secret-SetConfiguration",
+              "name": "WEBHOOK_SECRET",
+              "value": "YOUR_WEBHOOK_SECRET_HERE",
+              "type": "string"
+            },
+            {
+              "id": "id-sip-domain",
+              "name": "RETELL_SIP_DOMAIN",
+              "value": "YOUR_RETELL_SIP_DOMAIN.sip.livekit.cloud",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "15aa2111-e609-47a4-9566-4d4e23236702",
+      "name": "Set Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4496,
+        7072
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.retellai.com/v2/register-phone-call",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.RETELL_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"agent_id\": \"{{ $json.RETELL_AGENT_ID }}\",\n  \"from_number\": \"{{ $json.TWILIO_FROM_NUMBER }}\",\n  \"to_number\": \"{{ $json.to_number }}\",\n  \"direction\": \"outbound\",\n  \"metadata\": {\n    \"lead_id\": \"{{ $json.lead_id }}\",\n    \"source\": \"n8n_workflow\"\n  },\n  \"retell_llm_dynamic_variables\": {\n    \"customer_name\": \"{{ $json.lead_name }}\",\n    \"customer_gender\": \"{{ $json.lead_gender }}\",\n    \"customer_phone\": \"{{ $json.to_number }}\",\n    \"lead_source\": \"{{ $json.lead_source }}\",\n    \"lead_id\": \"{{ $json.lead_id }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "ba712156-954d-4a93-aac4-5c758df93da9",
+      "name": "Register Call with Retell",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        4656,
+        7072
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "jsCode": "const callId = $input.first().json.call_id;\nconst config = $('Set Configuration').first().json;\n\nif (!callId) {\n  throw new Error('No call_id from Retell: ' + JSON.stringify($input.first().json));\n}\n\n// Build SIP URI\nconst sipUri = `sip:${callId}@${config.RETELL_SIP_DOMAIN}`;\n\nreturn [{ \n  json: { \n    callId,\n    sipUri,\n    toNumber: config.to_number,\n    fromNumber: config.TWILIO_FROM_NUMBER,\n    twilioAccountSid: config.TWILIO_ACCOUNT_SID\n  } \n}];"
+      },
+      "id": "e420fa44-813f-481e-ad17-db6f986e9c3a",
+      "name": "Build SIP URI",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4880,
+        7072
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $json.twilioAccountSid }}/Calls.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "twilioApi",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "To",
+              "value": "={{ $json.toNumber }}"
+            },
+            {
+              "name": "From",
+              "value": "={{ $json.fromNumber }}"
+            },
+            {
+              "name": "Twiml",
+              "value": "=<Response><Dial><Sip>{{ $json.sipUri }}</Sip></Dial></Response>"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "720e9f62-320d-4abf-be0a-b6fa1b3406d7",
+      "name": "Twilio Create Call with SIP",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        5088,
+        7072
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "twilioApi": {
+          "id": "5azZZh9DlRS2IUoQ",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"retell_call_id\": \"{{ $('Build SIP URI').first().json.callId }}\",\n  \"twilio_sid\": \"{{ $json.sid }}\",\n  \"status\": \"{{ $json.status }}\"\n}",
+        "options": {}
+      },
+      "id": "4531cfbf-e92b-4937-a737-98db13cb1967",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        5312,
+        7072
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "retell-check-qualification",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "255807f3-8d3f-44a2-98e5-864406cb5d02",
+      "name": "Qualification Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        4208,
+        7376
+      ],
+      "webhookId": "2de0f2e4-36a2-4fa5-92d8-87e07e75beb8"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "f132dfda-d75e-4628-ad8c-c759189c7c2e",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        4928,
+        7376
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "=You are a lead qualification assistant for a home renovation company.\n\nYour job:\n- Analyze the lead information\n- Assign a qualification score from 0 to 100\n- Decide the qualification status\n- Recommend the next action\n\nRules:\n- Be strict but fair\n- Higher budget + sooner timeline = higher score\n- If information is vague, lower the score\n- Support English and Arabic input\n\nOutput ONLY valid JSON.\nyou MUST respond exactly like this:\n{\n  \"qualification_status\": \"qualified\",\n  \"score\": 78,\n  \"recommended_action\": \"book_appointment\",\n  \"message\": \"High-intent lead with clear budget and near-term timeline.\",\n  \"reasoning\": [\n    \"Clear project type (kitchen renovation)\",\n    \"Budget explicitly stated and sufficient\",\n    \"Timeline within 1–3 months\",\n    \"Location provided\"\n  ],\n  \"collected_data\": {\n    \"project_type\": \"\",\n    \"project_scope\": \"\",\n    \"budget\": \"\",\n    \"timeline\": \"\",\n    \"location\": \"\"\n  }\n}\n\nDo not add explanations outside JSON.\n"
+            },
+            {
+              "content": "=Lead information:\n\nProject Type: {{ $json.project_type }}\nProject Scope: {{ $json.project_scope }}\nBudget: {{ $json.budget }}\nTimeline: {{ $json.timeline }}\nLocation: {{ $json.location }}\n\nDecide:\n- qualification_status: qualified | warm | not_qualified\n- score: number from 0 to 100\n- recommended_action: book_appointment | send_info | nurture\n- message: short explanation for internal use\n- reasoning: bullet-style reasoning\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        4528,
+        7376
+      ],
+      "id": "9dde9551-c633-4b73-889b-9716e6311f83",
+      "name": "Message a model",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "openAiApi": {
+          "id": "hCzKgUBYZpjbJbzJ",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# 🎯 Voice AI Lead Qualification System\n\n**What this workflow does:**\nAutomatically qualifies leads through AI-powered phone calls using Retell AI + Twilio.\n\n**Main Features:**\n- Receives new leads and triggers AI calls\n- Qualifies leads through natural conversation\n- Books appointments for qualified leads\n- Syncs all data to Frappe CRM\n- Handles errors with notifications\n\n**Author:** Roaa | **Version:** 1.0",
+        "height": 372,
+        "width": 1328,
+        "color": 4
+      },
+      "id": "a6264a4b-c865-4b96-9eb6-f9eb87d0651d",
+      "name": "📋 System Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3616,
+        5968
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 📥 NEW LEAD FLOW\n\n**Trigger:** POST `/webhook/new-lead`\n\n**Input:**\n```json\n{\n  \"mobile_no\": \"+20XXXXXXXXXX\",\n  \"lead_name\": \"Ahmed\",\n  \"email\": \"ahmed@email.com\",\n  \"source\": \"Facebook\"\n}\n```\n\n**Process:**\n1. Validate phone exists\n2. Check if lead already in CRM\n3. Create new lead OR use existing\n4. Wait 5 seconds (configurable)\n5. Trigger outbound AI call\n6. Update CRM with call status",
+        "height": 492,
+        "width": 3044,
+        "color": 6
+      },
+      "id": "54ecb530-a11f-42bc-b3c9-a9a7ec05520f",
+      "name": "📥 New Lead Documentation",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3888,
+        6448
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## AI Lead Qualification (LLM)\n\nWebhook: POST /webhook/retell-check-qualification\n\nFlow →\nReceive lead data\n→ LLM evaluates intent\n→ Score lead (0–100)\n→ Decide status\n→ Recommend next action\n→ Return JSON\n\n\n\nInputs →\nproject_type • project_scope • budget • timeline • location\n\nLLM Rules →\n• Strict but fair\n• Higher budget + sooner timeline = higher score\n• Vague info = lower score\n• English & Arabic supported\n\nOutputs →\nqualification_status: qualified | warm | not_qualified\nscore\nrecommended_action: book_appointment | send_info | nurture\n\nUsed by AI to decide booking, info, or nurturing.\n",
+        "height": 276,
+        "width": 1220,
+        "color": 4
+      },
+      "id": "7a46c9f9-61ed-4ff9-9208-bfc11a4e2186",
+      "name": "📊 Qualification Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3888,
+        7280
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 📅 AVAILABLE SLOTS\n\n**Webhook:** `/webhook/retell-get-slots`\n\n**What it does:**\n1. Gets events from Google Calendar\n2. Defines business hours (9AM-5PM)\n3. Finds gaps = available slots\n4. Returns to AI agent\n\n**AI uses this to say:**\n\"I have availability on Monday at 10 AM or Tuesday at 2 PM...\"",
+        "height": 276,
+        "width": 1404,
+        "color": 5
+      },
+      "id": "b2a1220e-3a96-44cd-a7c6-0c6a58f2c2ef",
+      "name": "📅 Slots Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3888,
+        7600
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Outbound AI Call (Retell + Twilio SIP)\n\nWebhook: POST /webhook/start-outbound-call\n\nFlow →\nReceive request\n→ Load config\n→ Register call (Retell)\n→ Build SIP URI\n→ Create Twilio call\n→ Respond success\n\nRequired:\n• to_number\n\nOptional:\n• lead_id • lead_name • lead_gender • lead_source\n\nKey idea:\nRetell runs the AI conversation.\nTwilio handles the phone via SIP.\n\nReturns:\nretell_call_id • twilio_sid • status\n",
+        "height": 256,
+        "width": 1648
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3888,
+        6992
+      ],
+      "typeVersion": 1,
+      "id": "ad7fe5e0-316b-42f7-985d-4769590760b6",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Appointment Booking & Confirmation\n\nWebhook: POST /webhook/book-appointment\n\nFlow →\nReceive booking request\n→ Load config\n→ Format appointment data\n→ Create calendar event\n→ Update CRM\n→ Notify everyone\n→ Respond success\n\nParallel Actions →\n• Update lead in Frappe \n(time, status, event ID)\n• Create Google Calendar event\n• Alert sales team (Telegram)\n• Send confirmation email\n• Send SMS confirmation\n\nKey Idea →\nOne booking triggers ALL confirmations automatically.\n\nResult →\nCRM updated • Calendar synced • Lead + sales notified\n",
+        "height": 560,
+        "width": 1936,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3888,
+        7904
+      ],
+      "typeVersion": 1,
+      "id": "28834636-cb07-457a-ba1e-9af8e05a9898",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## CRM Sync & Error Handling\n\nCRM Update Flow →\nReceive update webhook\n→ Extract lead update data\n→ Update Frappe Lead\n→ Return success to AI\n\nPurpose →\nKeep CRM in sync during / after AI calls\n(no waiting for call end)",
+        "height": 272,
+        "width": 1216,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3888,
+        8512
+      ],
+      "typeVersion": 1,
+      "id": "3897eca1-94b2-48d9-9dc1-8323147c9c15",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Global Error Handling →\nCatch any workflow failure\n→ Extract error details\n→ Log error to Google Sheets\n→ Alert admin via SMS / WhatsApp\n\nCaptured →\n• Node name\n• Error message\n• Timestamp\n\nKey Idea →\nCRM updates should be safe.\nErrors should be visible immediately.",
+        "height": 368,
+        "width": 944,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3904,
+        8832
+      ],
+      "typeVersion": 1,
+      "id": "3b0792cb-a84d-442b-88af-c0d31a3be537",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const secret = $('Workflow Configuration').first().json.WEBHOOK_SECRET;\nconst incoming = $input.first().json.headers?.['x-webhook-secret'] || '';\n\nif (!secret || secret === 'YOUR_WEBHOOK_SECRET_HERE') {\n  // Secret not configured — log warning but allow (dev mode)\n  return $input.all();\n}\n\nif (incoming !== secret) {\n  throw new Error('Unauthorized: invalid or missing X-Webhook-Secret header');\n}\n\nreturn $input.all();"
+      },
+      "id": "788f35d3-8f15-4399-b01a-cb8ce4230b2e",
+      "name": "Auth Check — new-lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4352,
+        6752
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const secret = $('Set Configuration').first().json.WEBHOOK_SECRET;\nconst incoming = $input.first().json.headers?.['x-webhook-secret'] || '';\n\nif (!secret || secret === 'YOUR_WEBHOOK_SECRET_HERE') {\n  // Secret not configured — log warning but allow (dev mode)\n  return $input.all();\n}\n\nif (incoming !== secret) {\n  throw new Error('Unauthorized: invalid or missing X-Webhook-Secret header');\n}\n\nreturn $input.all();"
+      },
+      "id": "0d8dcd51-ca7f-4d25-994b-a8f522dad1e0",
+      "name": "Auth Check — start-outbound-call",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4336,
+        7072
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const secret = $('Set Configuration').first().json.WEBHOOK_SECRET;\nconst incoming = $input.first().json.headers?.['x-webhook-secret'] || '';\n\nif (!secret || secret === 'YOUR_WEBHOOK_SECRET_HERE') {\n  // Secret not configured — log warning but allow (dev mode)\n  return $input.all();\n}\n\nif (incoming !== secret) {\n  throw new Error('Unauthorized: invalid or missing X-Webhook-Secret header');\n}\n\nreturn $input.all();"
+      },
+      "id": "8200cab1-c3e4-4e28-92dc-5ae4ea29a355",
+      "name": "Auth Check — retell-check-qualification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4384,
+        7376
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const secret = $('Workflow Configuration 3').first().json.WEBHOOK_SECRET;\nconst incoming = $input.first().json.headers?.['x-webhook-secret'] || '';\n\nif (!secret || secret === 'YOUR_WEBHOOK_SECRET_HERE') {\n  // Secret not configured — log warning but allow (dev mode)\n  return $input.all();\n}\n\nif (incoming !== secret) {\n  throw new Error('Unauthorized: invalid or missing X-Webhook-Secret header');\n}\n\nreturn $input.all();"
+      },
+      "id": "c3bffc3a-bdea-4d3d-9bf2-ab42c7f9c8e0",
+      "name": "Auth Check — retell-get-slots",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4384,
+        7664
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const secret = $('Workflow Configuration 4').first().json.WEBHOOK_SECRET;\nconst incoming = $input.first().json.headers?.['x-webhook-secret'] || '';\n\nif (!secret || secret === 'YOUR_WEBHOOK_SECRET_HERE') {\n  // Secret not configured — log warning but allow (dev mode)\n  return $input.all();\n}\n\nif (incoming !== secret) {\n  throw new Error('Unauthorized: invalid or missing X-Webhook-Secret header');\n}\n\nreturn $input.all();"
+      },
+      "id": "22322296-6515-4896-ab18-658242487c3f",
+      "name": "Auth Check — book-appointment",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4368,
+        8112
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const secret = $('Workflow Configuration 5').first().json.WEBHOOK_SECRET;\nconst incoming = $input.first().json.headers?.['x-webhook-secret'] || '';\n\nif (!secret || secret === 'YOUR_WEBHOOK_SECRET_HERE') {\n  // Secret not configured — log warning but allow (dev mode)\n  return $input.all();\n}\n\nif (incoming !== secret) {\n  throw new Error('Unauthorized: invalid or missing X-Webhook-Secret header');\n}\n\nreturn $input.all();"
+      },
+      "id": "56dcbe09-04d9-4451-b306-fca902b6d723",
+      "name": "Auth Check — update-crm",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4384,
+        8592
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "guard-cond-1",
+              "leftValue": "={{ $json.call_status }}",
+              "rightValue": "Calling",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "guard-cond-2",
+              "leftValue": "={{ $json.call_status }}",
+              "rightValue": "Completed",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "fdee678d-05db-4d06-9c0a-e264539e18ce",
+      "name": "Guard — Not Already Called",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5776,
+        6656
+      ]
+    },
+    {
+      "parameters": {
+        "errorMessage": "Lead already has an active or completed AI call — skipping duplicate"
+      },
+      "id": "b55c2d1a-5044-43fd-8726-dc521830d9eb",
+      "name": "Stop — Already Called",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        6000,
+        6816
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const responseText = $input.first().json?.message?.content || \n                       $input.first().json?.content?.[0]?.text || \n                       JSON.stringify($input.first().json);\n\nconst fallback = {\n  qualification_status: 'not_qualified',\n  score: 0,\n  recommended_action: 'nurture',\n  message: 'LLM response parse error — defaulting to not qualified',\n  reasoning: ['Could not parse AI response'],\n  collected_data: { project_type: '', project_scope: '', budget: '', timeline: '', location: '' }\n};\n\ntry {\n  // Strip markdown fences if present\n  const cleaned = responseText.replace(/```json|```/g, '').trim();\n  const parsed = JSON.parse(cleaned);\n  \n  // Validate required fields\n  const required = ['qualification_status', 'score', 'recommended_action'];\n  const valid = required.every(k => parsed[k] !== undefined);\n  \n  if (!valid) {\n    console.warn('LLM response missing required fields, using fallback');\n    return [{ json: fallback }];\n  }\n  \n  // Clamp score to 0-100\n  parsed.score = Math.max(0, Math.min(100, Number(parsed.score) || 0));\n  \n  return [{ json: parsed }];\n} catch (e) {\n  console.error('LLM JSON parse failed:', e.message);\n  return [{ json: fallback }];\n}"
+      },
+      "id": "1a089e9b-decf-4fd5-80db-cf24b3f52914",
+      "name": "Validate LLM Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4784,
+        7376
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Update Lead - Calling": {
+      "main": [
+        [
+          {
+            "node": "Format Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Outbound Call": {
+      "main": [
+        [
+          {
+            "node": "Update Lead - Calling",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Before Call": {
+      "main": [
+        [
+          {
+            "node": "Trigger Outbound Call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set New Lead Data": {
+      "main": [
+        [
+          {
+            "node": "Guard — Not Already Called",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Existing Lead Data": {
+      "main": [
+        [
+          {
+            "node": "Guard — Not Already Called",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Lead in Frappe": {
+      "main": [
+        [
+          {
+            "node": "Set New Lead Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Lead Exists": {
+      "main": [
+        [
+          {
+            "node": "Set Existing Lead Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Lead in Frappe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Lead Exists": {
+      "main": [
+        [
+          {
+            "node": "If Lead Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Phone Exists": {
+      "main": [
+        [
+          {
+            "node": "Check if Lead Exists",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop - No Phone",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Configuration": {
+      "main": [
+        [
+          {
+            "node": "Validate Phone Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New Lead Webhook": {
+      "main": [
+        [
+          {
+            "node": "Auth Check — new-lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Configuration 8": {
+      "main": [
+        [
+          {
+            "node": "Log Error to Sheets",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "SMS Admin Error Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration 8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Frappe Lead": {
+      "main": [
+        [
+          {
+            "node": "Return Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Configuration 5": {
+      "main": [
+        [
+          {
+            "node": "Update Frappe Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update CRM Webhook": {
+      "main": [
+        [
+          {
+            "node": "Auth Check — update-crm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS Confirmation": {
+      "main": [
+        [
+          {
+            "node": "Return Booking Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Frappe Appointment": {
+      "main": [
+        [
+          {
+            "node": "Alert Sales Team",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Email Confirmation",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send SMS Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Calendar Event": {
+      "main": [
+        [
+          {
+            "node": "Update Frappe Appointment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Appointment Data": {
+      "main": [
+        [
+          {
+            "node": "Create Calendar Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Configuration 4": {
+      "main": [
+        [
+          {
+            "node": "Format Appointment Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Book Appointment Webhook": {
+      "main": [
+        [
+          {
+            "node": "Auth Check — book-appointment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Free Slots": {
+      "main": [
+        [
+          {
+            "node": "Return Available Slots",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Calendar Events": {
+      "main": [
+        [
+          {
+            "node": "Find Free Slots",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Configuration 3": {
+      "main": [
+        [
+          {
+            "node": "Get Calendar Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Available Slots Webhook": {
+      "main": [
+        [
+          {
+            "node": "Auth Check — retell-get-slots",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receive Call Request": {
+      "main": [
+        [
+          {
+            "node": "Auth Check — start-outbound-call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Configuration": {
+      "main": [
+        [
+          {
+            "node": "Register Call with Retell",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Register Call with Retell": {
+      "main": [
+        [
+          {
+            "node": "Build SIP URI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build SIP URI": {
+      "main": [
+        [
+          {
+            "node": "Twilio Create Call with SIP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twilio Create Call with SIP": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qualification Webhook": {
+      "main": [
+        [
+          {
+            "node": "Auth Check — retell-check-qualification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Validate LLM Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth Check — new-lead": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth Check — start-outbound-call": {
+      "main": [
+        [
+          {
+            "node": "Set Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth Check — retell-check-qualification": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth Check — retell-get-slots": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth Check — book-appointment": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration 4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth Check — update-crm": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration 5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guard — Not Already Called": {
+      "main": [
+        [
+          {
+            "node": "Wait Before Call",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop — Already Called",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate LLM Response": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "zXxPYKVxpyK47onO",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": -1
+  },
+  "versionId": "34322692-e903-45c2-b928-907b80a19b3a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2ee1bd50ea66e5b37c3d9c69daf0e1daaf5a996a4a75a383b8c1bbf7d3ed7472"
+  },
+  "id": "zXxPYKVxpyK47onO",
+  "tags": []
+}
